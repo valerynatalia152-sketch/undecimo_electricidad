@@ -1,0 +1,183 @@
+/*
+ * PROYECTO: Sistema de Monitoreo de Humedad del Suelo
+ * Descripción: Lee el sensor de humedad y muestra el estado con LEDs
+ * Autor: Sistema de Riego Inteligente
+ * Fecha: Enero 2026
+ */
+
+// ========== DEFINICIÓN DE PINES ==========
+const int SENSOR_PIN = A0;      // Pin analógico del sensor
+const int LED_ROJO = 9;         // LED rojo (suelo seco)
+const int LED_AMARILLO = 10;    // LED amarillo (humedad media)
+const int LED_VERDE = 11;       // LED verde (suelo húmedo)
+
+// ========== VARIABLES GLOBALES ==========
+int valorHumedad = 0;           // Valor leído del sensor (0-1023)
+int porcentajeHumedad = 0;      // Porcentaje de humedad (0-100%)
+
+// ========== UMBRALES DE HUMEDAD ==========
+const int HUMEDO = 30;          // Por debajo de 30% = SECO
+const int MEDIO = 60;           // Entre 30-60% = MEDIO
+                                // Por encima de 60% = HÚMEDO
+
+// ========== CONFIGURACIÓN INICIAL ==========
+void setup() {
+  // Inicializar comunicación serial
+  Serial.begin(9600);
+  Serial.println("=================================");
+  Serial.println(" SISTEMA DE MONITOREO DE HUMEDAD");
+  Serial.println("=================================");
+  Serial.println();
+  
+  // Configurar pines de LEDs como salida
+  pinMode(LED_ROJO, OUTPUT);
+  pinMode(LED_AMARILLO, OUTPUT);
+  pinMode(LED_VERDE, OUTPUT);
+  
+  // Apagar todos los LEDs al inicio
+  apagarLEDs();
+  
+  // Efecto de inicio (prueba de LEDs)
+  pruebaLEDs();
+  
+  Serial.println("Sistema iniciado correctamente");
+  Serial.println("Leyendo sensor...");
+  Serial.println();
+}
+
+// ========== BUCLE PRINCIPAL ==========
+void loop() {
+  // Leer valor del sensor (0 = muy húmedo, 1023 = muy seco)
+  valorHumedad = analogRead(SENSOR_PIN);
+  
+  // Convertir a porcentaje (invertido porque menor valor = más humedad)
+  // 0 (húmedo) → 100%
+  // 1023 (seco) → 0%
+  porcentajeHumedad = map(valorHumedad, 1023, 0, 0, 100);
+  
+  // Limitar entre 0 y 100
+  porcentajeHumedad = constrain(porcentajeHumedad, 0, 100);
+  
+  // Mostrar información en el monitor serial
+  mostrarInformacion();
+  
+  // Controlar LEDs según nivel de humedad
+  controlarLEDs();
+  
+  // Esperar 2 segundos antes de la siguiente lectura
+  delay(2000);
+}
+
+// ========== FUNCIONES AUXILIARES ==========
+
+// Función para apagar todos los LEDs
+void apagarLEDs() {
+  digitalWrite(LED_ROJO, LOW);
+  digitalWrite(LED_AMARILLO, LOW);
+  digitalWrite(LED_VERDE, LOW);
+}
+
+// Función para probar los LEDs al inicio
+void pruebaLEDs() {
+  Serial.println("Probando LEDs...");
+  
+  digitalWrite(LED_ROJO, HIGH);
+  delay(300);
+  digitalWrite(LED_ROJO, LOW);
+  
+  digitalWrite(LED_AMARILLO, HIGH);
+  delay(300);
+  digitalWrite(LED_AMARILLO, LOW);
+  
+  digitalWrite(LED_VERDE, HIGH);
+  delay(300);
+  digitalWrite(LED_VERDE, LOW);
+  
+  delay(500);
+}
+
+// Función para mostrar información en el monitor serial
+void mostrarInformacion() {
+  Serial.println("----------------------------------");
+  Serial.print("Valor RAW del sensor: ");
+  Serial.println(valorHumedad);
+  Serial.print("Humedad: ");
+  Serial.print(porcentajeHumedad);
+  Serial.println("%");
+  
+  // Mostrar barra de progreso visual
+  Serial.print("[");
+  int barras = porcentajeHumedad / 5;  // 20 barras máximo
+  for(int i = 0; i < 20; i++) {
+    if(i < barras) {
+      Serial.print("=");
+    } else {
+      Serial.print(" ");
+    }
+  }
+  Serial.println("]");
+  
+  // Mostrar estado
+  Serial.print("Estado: ");
+  if(porcentajeHumedad < HUMEDO) {
+    Serial.println("SECO - ¡Necesita riego!");
+  } else if(porcentajeHumedad < MEDIO) {
+    Serial.println("HUMEDAD MEDIA");
+  } else {
+    Serial.println("HÚMEDO - Riego adecuado");
+  }
+  Serial.println();
+}
+
+// Función para controlar los LEDs según humedad
+void controlarLEDs() {
+  // Apagar todos primero
+  apagarLEDs();
+  
+  // Encender LED correspondiente
+  if(porcentajeHumedad < HUMEDO) {
+    // Suelo SECO - LED ROJO encendido
+    digitalWrite(LED_ROJO, HIGH);
+    
+  } else if(porcentajeHumedad < MEDIO) {
+    // Humedad MEDIA - LED AMARILLO encendido
+    digitalWrite(LED_AMARILLO, HIGH);
+    
+  } else {
+    // Suelo HÚMEDO - LED VERDE encendido
+    digitalWrite(LED_VERDE, HIGH);
+  }
+}
+
+// ========== FUNCIONES ADICIONALES (OPCIONALES) ==========
+
+// Función para alertas parpadeantes (puedes llamarla en loop si quieres)
+void alertaSeco() {
+  if(porcentajeHumedad < 20) {  // Muy seco
+    for(int i = 0; i < 3; i++) {
+      digitalWrite(LED_ROJO, HIGH);
+      delay(200);
+      digitalWrite(LED_ROJO, LOW);
+      delay(200);
+    }
+  }
+}
+
+// Función para calibración manual (usar en setup si necesitas)
+void calibrarSensor() {
+  Serial.println("MODO CALIBRACIÓN");
+  Serial.println("Sumerge el sensor en agua...");
+  delay(3000);
+  int valorAgua = analogRead(SENSOR_PIN);
+  Serial.print("Valor en agua: ");
+  Serial.println(valorAgua);
+  
+  Serial.println("Saca el sensor al aire...");
+  delay(3000);
+  int valorAire = analogRead(SENSOR_PIN);
+  Serial.print("Valor en aire: ");
+  Serial.println(valorAire);
+  
+  Serial.println("Calibración completada");
+  Serial.println("----------------------------------");
+}
