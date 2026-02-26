@@ -1,0 +1,42 @@
+// Programación Arduino: 1 pulsador enciende un LED al azar entre 4 LEDs
+
+const int boton = 2;        // Pin del pulsador
+const int leds[] = {8, 9, 10, 11}; // Pines de los 4 LEDs
+int ledAnterior = -1;       // Último LED encendido
+bool estadoAnterior = HIGH; // Estado anterior del botón (con pull-up)
+
+void setup() {
+  pinMode(boton, INPUT_PULLUP); // Pulsador con resistencia interna
+  for (int i = 0; i < 4; i++) {
+    pinMode(leds[i], OUTPUT);
+    digitalWrite(leds[i], LOW);
+  }
+  randomSeed(analogRead(A0)); // Semilla aleatoria
+}
+
+void loop() {
+  bool estadoActual = digitalRead(boton);
+
+  // Detectar flanco de bajada (botón presionado)
+  if (estadoAnterior == HIGH && estadoActual == LOW) {
+    
+    // Apagar todos los LEDs
+    for (int i = 0; i < 4; i++) {
+      digitalWrite(leds[i], LOW);
+    }
+
+    // Elegir un LED al azar (diferente al anterior)
+    int ledElegido;
+    do {
+      ledElegido = random(0, 4);
+    } while (ledElegido == ledAnterior);
+
+    // Encender el LED elegido
+    digitalWrite(leds[ledElegido], HIGH);
+    ledAnterior = ledElegido;
+
+    delay(50); // Anti-rebote
+  }
+
+  estadoAnterior = estadoActual;
+}
