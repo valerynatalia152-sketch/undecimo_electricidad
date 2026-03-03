@@ -1,0 +1,15 @@
+int boton = 8;
+int buzzer = 9;
+
+void setup() {
+  pinMode(boton, INPUT);
+  pinMode(buzzer, OUTPUT);
+}
+
+void loop() {
+  if (digitalRead(boton) == HIGH) {
+    digitalWrite(buzzer, HIGH);  // suena
+  } else {
+    digitalWrite(buzzer, LOW);   // no suena
+  }
+}
