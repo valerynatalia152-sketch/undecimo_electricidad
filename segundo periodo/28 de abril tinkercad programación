@@ -1,0 +1,27 @@
+/* Manual de programación con Arduino
+*  Práctica: Señales PWM
+*  Objetivo: Programa que lee el valor de un potenciómetro
+   y lo usa para ajustar el brillo a un led usando una señal PWM
+*  Fecha: agosto 2020
+*  Autor: Miguel Ángel Bañuelos
+*/
+
+// Declaración de constantes
+const int pinSensor = 0; // Sensor analógico conectado al potenciómetro
+const int pinLed = 6; // Salida PWM conectada al LED
+
+// Declaración de variables
+int brilloLed = 0; // Almacena el valor de brillo que se dará al LED
+int valorPotenciometro = 0; // Almacena el valor leído del potenciómetro
+
+// Inicialización
+void setup() {
+pinMode(pinLed, OUTPUT); // Define al pin 6 como salida PWM 
+}
+// Programa principal
+void loop(){
+valorPotenciometro = analogRead(pinSensor); // Lee el valor del potenciómetro
+brilloLed = map(valorPotenciometro, 0, 1023, 0, 255); // Reescala el valor del pot
+analogWrite(pinLed, brilloLed); // Se ajusta la salida del pin PWM
+delay(100); // Retardo de 100 milisegundos
+}
