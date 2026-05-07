@@ -1,0 +1,65 @@
+// Comandos: L1:1 → LED1 ON | L1:0 → LED1 OFF
+//           L2:1 → LED2 ON | L2:0 → LED2 OFF
+//           L3:1 → LED3 ON | L3:0 → LED3 OFF
+
+#include <SoftwareSerial.h>
+
+SoftwareSerial bluetooth(11, 10);
+
+#define LED1 6
+#define LED2 5
+#define LED3 3
+
+String buffer = "";
+
+void aplicarComando(String cmd) {
+  cmd.trim();
+  if (cmd.length() < 4) return;
+
+  char canal = cmd[1];
+  int  valor = cmd.substring(3).toInt();
+
+  switch (canal) {
+    case '1': digitalWrite(LED1, valor ? HIGH : LOW); break;
+    case '2': digitalWrite(LED2, valor ? HIGH : LOW); break;
+    case '3': digitalWrite(LED3, valor ? HIGH : LOW); break;
+  }
+
+  String resp = "[OK] LED" + String(canal) + (valor ? " ON" : " OFF");
+  Serial.println(resp);
+  bluetooth.println(resp);
+}
+
+void setup() {
+  Serial.begin(9600);
+  bluetooth.begin(9600);
+
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+  pinMode(LED3, OUTPUT);
+
+  digitalWrite(LED1, LOW);
+  digitalWrite(LED2, LOW);
+  digitalWrite(LED3, LOW);
+
+  Serial.println("Listo! Comandos: L1:1 L1:0 L2:1 L2:0 L3:1 L3:0");
+}
+
+void leerSerial(Stream &port) {
+  while (port.available()) {
+    char c = (char) port.read();
+    if (c == '\n' || c == '\r') {
+      if (buffer.length() > 0) {
+        aplicarComando(buffer);
+        buffer = "";
+      }
+    } else {
+      buffer += c;
+    }
+  }
+}
+
+void loop() {
+  leerSerial(bluetooth);
+  leerSerial(Serial);
+}
